@@ -24,7 +24,7 @@ from script.hassfest.docker import _GO2RTC_SHA as DOCKER_SHA
 async def _get_version_from_docker_sha() -> str:
     """Extract go2rtc version from Docker image using the pinned SHA."""
 
-    image = f"ghcr.io/alexxit/go2rtc@sha256:{DOCKER_SHA}"
+    image = f"ghcr.io/eshattow/go2rtc@sha256:{DOCKER_SHA}"
 
     pull_process = await asyncio.create_subprocess_exec(
         "docker",

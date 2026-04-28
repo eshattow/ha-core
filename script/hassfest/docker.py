@@ -14,7 +14,8 @@ _DOCKERFILE_SYNTAX_SHA = (
 )
 
 _GO2RTC_SHA = (
-    "675c318b23c06fd862a61d262240c9a63436b4050d177ffc68a32710d9e05bae"  # 1.9.14
+#    "675c318b23c06fd862a61d262240c9a63436b4050d177ffc68a32710d9e05bae"  # 1.9.14
+    "946b256dd610803963a78293f1d4dfea2f7675842b900c67b2f5da41e03d5be5"  # eshattow/go2rtc:riscv
 )
 
 DOCKERFILE_TEMPLATE = r"""# syntax=docker/dockerfile@sha256:{dockerfile_syntax}
@@ -45,7 +46,7 @@ WORKDIR /usr/src
 COPY rootfs /
 
 # Add go2rtc binary
-COPY --from=ghcr.io/alexxit/go2rtc@sha256:{go2rtc} /usr/local/bin/go2rtc /bin/go2rtc
+COPY --from=ghcr.io/eshattow/go2rtc@sha256:{go2rtc} /usr/local/bin/go2rtc /bin/go2rtc
 
 ## Setup Home Assistant Core dependencies
 COPY --parents requirements.txt homeassistant/package_constraints.txt homeassistant/
@@ -55,7 +56,6 @@ RUN \
     # Install uv at the version pinned in the requirements file
     && pip3 install --no-cache-dir "uv==$(awk -F'==' '/^uv==/{{print $2}}' homeassistant/requirements.txt)" \
     && uv pip install \
-        --no-build \
         -r homeassistant/requirements.txt
 
 COPY requirements_all.txt home_assistant_frontend-* home_assistant_intents-* homeassistant/
@@ -64,13 +64,13 @@ RUN \
         uv pip install homeassistant/home_assistant_*.whl; \
     fi \
     && uv pip install \
-        --no-build \
         -r homeassistant/requirements_all.txt
 
 ## Setup Home Assistant Core
 COPY --parents LICENSE* README* homeassistant/ pyproject.toml homeassistant/
 RUN \
     uv pip install \
+        --index-strategy unsafe-first-match \
         -e ./homeassistant \
     && python3 -m compileall \
         homeassistant/homeassistant
@@ -100,7 +100,7 @@ _MACHINES = {
     "raspberrypi3-64": _MachineConfig(arch="aarch64", packages=("raspberrypi-utils",)),
     "raspberrypi4-64": _MachineConfig(arch="aarch64", packages=("raspberrypi-utils",)),
     "raspberrypi5-64": _MachineConfig(arch="aarch64", packages=("raspberrypi-utils",)),
-    "yellow": _MachineConfig(arch="aarch64", packages=("raspberrypi-utils",)),
+    "yellow": _MachineConfig(arch="riscv64"),
 }
 
 _MACHINE_DOCKERFILE_TEMPLATE = r"""# syntax=docker/dockerfile@sha256:{dockerfile_syntax}
@@ -157,7 +157,6 @@ RUN --mount=type=tmpfs,target=/tmp \
     # Install uv at the version pinned in the requirements file
     && pip install --no-cache-dir "uv==$(awk -F'==' '/^uv==/{{print $2}}' /usr/src/homeassistant/requirements.txt)" \
     && uv pip install \
-        --no-build \
         --no-cache \
         -c /usr/src/homeassistant/homeassistant/package_constraints.txt \
         -r /usr/src/homeassistant/requirements.txt \

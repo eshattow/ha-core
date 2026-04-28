@@ -23,7 +23,6 @@ RUN --mount=type=tmpfs,target=/tmp \
     # Install uv at the version pinned in the requirements file
     && pip install --no-cache-dir "uv==$(awk -F'==' '/^uv==/{print $2}' /usr/src/homeassistant/requirements.txt)" \
     && uv pip install \
-        --no-build \
         --no-cache \
         -c /usr/src/homeassistant/homeassistant/package_constraints.txt \
         -r /usr/src/homeassistant/requirements.txt \

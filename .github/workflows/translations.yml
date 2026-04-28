@@ -32,6 +32,7 @@ jobs:
           python-version-file: ".python-version"
 
       - name: Upload Translations
+        if: false
         env:
           LOKALISE_TOKEN: ${{ secrets.LOKALISE_TOKEN }} # zizmor: ignore[secrets-outside-env]
         run: |

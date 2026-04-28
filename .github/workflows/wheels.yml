@@ -25,7 +25,6 @@ concurrency:
 jobs:
   init:
     name: Initialize wheels builder
-    if: github.repository_owner == 'home-assistant'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
@@ -53,7 +52,7 @@ jobs:
           if [[ "${GITHUB_EVENT_NAME}" =~ (schedule|workflow_dispatch) ]]; then
             touch requirements_diff.txt
           else
-            curl -s -o requirements_diff.txt https://raw.githubusercontent.com/home-assistant/core/master/requirements.txt
+            curl -s -o requirements_diff.txt https://raw.githubusercontent.com/${{ github.repository }}/master/requirements.txt
           fi
 
       - name: Write env-file
@@ -71,6 +70,9 @@ jobs:
 
             # Use C-Extension for SQLAlchemy
             echo "REQUIRE_SQLALCHEMY_CEXT=1"
+
+            # disable warnings as errors 'netifaces' build failure workaround
+            echo "CFLAGS=-Wno-error=sign-compare -Wno-error=int-conversion"
           ) > .env_file
 
       - name: Upload env_file
@@ -101,19 +103,20 @@ jobs:
 
   core:
     name: Build Core wheels ${{ matrix.abi }} for ${{ matrix.arch }} (musllinux_1_2)
-    if: github.repository_owner == 'home-assistant'
     needs: init
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         abi: ["cp314"]
-        arch: ["amd64", "aarch64"]
+        arch: ["amd64", "aarch64", "riscv64"]
         include:
           - arch: amd64
             os: ubuntu-latest
           - arch: aarch64
             os: ubuntu-24.04-arm
+          - arch: riscv64
+            os: ubuntu-24.04-riscv
     steps:
       - name: Checkout the repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -137,14 +140,18 @@ jobs:
           sed -i "/uv/d" requirements_diff.txt
 
       - name: Build wheels
-        uses: home-assistant/wheels@e5742a69d69f0e274e2689c998900c7d19652c21 # 2025.12.0
+        uses: eshattow/ha-wheels@riscv
         with:
           abi: ${{ matrix.abi }}
           tag: musllinux_1_2
           arch: ${{ matrix.arch }}
           wheels-key: ${{ secrets.WHEELS_KEY }} # zizmor: ignore[secrets-outside-env]
+          wheels-host: ${{ vars.WHEELS_HOST }}
+          wheels-host-path: ${{ vars.WHEELS_HOST_PATH }}
+          wheels-user: ${{ vars.WHEELS_USER }}
+          wheels-index: ${{ vars.WHEELS_INDEX }}
           env-file: true
-          apk: "libffi-dev;openssl-dev;yaml-dev;nasm;zlib-ng-dev"
+          apk: "libffi-dev;openssl-dev;yaml-dev;nasm;zlib-ng-dev;zlib-dev;libjpeg-turbo-dev"
           skip-binary: aiohttp;multidict;propcache;yarl;SQLAlchemy
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
@@ -152,19 +159,20 @@ jobs:
 
   integrations:
     name: Build wheels ${{ matrix.abi }} for ${{ matrix.arch }}
-    if: github.repository_owner == 'home-assistant'
     needs: init
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         abi: ["cp314"]
-        arch: ["amd64", "aarch64"]
+        arch: ["amd64", "aarch64", "riscv64"]
         include:
           - arch: amd64
             os: ubuntu-latest
           - arch: aarch64
             os: ubuntu-24.04-arm
+          - arch: riscv64
+            os: ubuntu-24.04-riscv
     steps:
       - name: Checkout the repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -195,12 +203,16 @@ jobs:
           sed -i "/uv/d" requirements_diff.txt
 
       - name: Build wheels
-        uses: home-assistant/wheels@e5742a69d69f0e274e2689c998900c7d19652c21 # 2025.12.0
+        uses: eshattow/ha-wheels@riscv
         with:
           abi: ${{ matrix.abi }}
           tag: musllinux_1_2
           arch: ${{ matrix.arch }}
           wheels-key: ${{ secrets.WHEELS_KEY }} # zizmor: ignore[secrets-outside-env]
+          wheels-host: ${{ vars.WHEELS_HOST }}
+          wheels-host-path: ${{ vars.WHEELS_HOST_PATH }}
+          wheels-user: ${{ vars.WHEELS_USER }}
+          wheels-index: ${{ vars.WHEELS_INDEX }}
           env-file: true
           apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev;nasm;zlib-ng-dev"
           skip-binary: aiohttp;charset-normalizer;grpcio;multidict;SQLAlchemy;propcache;protobuf;pymicro-vad;yarl
