@@ -14,7 +14,7 @@ env:
   UV_HTTP_TIMEOUT: 60
   UV_SYSTEM_PYTHON: "true"
   # Base image version from https://github.com/home-assistant/docker
-  BASE_IMAGE_VERSION: "riscv"
+  BASE_IMAGE_VERSION: "2026.05.101"
   ARCHITECTURES: '["riscv64"]'
 
 permissions: {}
@@ -49,7 +49,7 @@ jobs:
       - name: Override version
         id: version
         run: |
-          echo "version=riscv" >> "$GITHUB_OUTPUT"
+          echo "version=2026.05.101" >> "$GITHUB_OUTPUT"
           echo "stable=true" >> "$GITHUB_OUTPUT"
           echo "channel=stable" >> "$GITHUB_OUTPUT"
           echo "publish=false" >> "$GITHUB_OUTPUT"
@@ -196,16 +196,16 @@ jobs:
           echo "${GITHUB_SHA};${GITHUB_REF};${GITHUB_EVENT_NAME};${GITHUB_ACTOR}" > rootfs/OFFICIAL_IMAGE
 
       - name: Build base image
-        uses: eshattow/ha-builder/actions/build-image@riscv
+        uses: haltrv/builder/actions/build-image@2026.05.101
         with:
           arch: ${{ matrix.arch }}
           build-args: |
-            BUILD_FROM=ghcr.io/${{ github.repository_owner }}/${{ matrix.arch }}-homeassistant-base:${{ needs.init.outputs.base_image_version }}
+            BUILD_FROM=ghcr.io/haltrv/${{ matrix.arch }}-homeassistant-base:${{ needs.init.outputs.base_image_version }}
           cache-gha: false
           container-registry-password: ${{ secrets.GITHUB_TOKEN }}
-          cosign-base-identity: "https://github.com/${{ github.repository_owner }}/ha-docker/.*"
-          cosign-base-verify: ghcr.io/${{ github.repository_owner }}/${{ matrix.arch }}-homeassistant-base:${{ needs.init.outputs.base_image_version }}
-          image: ghcr.io/${{ github.repository_owner }}/${{ matrix.arch }}-homeassistant
+          cosign-base-identity: "https://github.com/haltrv/docker/.*"
+          cosign-base-verify: ghcr.io/haltrv/${{ matrix.arch }}-homeassistant-base:${{ needs.init.outputs.base_image_version }}
+          image: ghcr.io/haltrv/${{ matrix.arch }}-homeassistant
           image-tags: ${{ needs.init.outputs.version }}
           push: true
           version: ${{ needs.init.outputs.version }}
@@ -247,18 +247,18 @@ jobs:
           fi
 
       - name: Build machine image
-        uses: eshattow/ha-builder/actions/build-image@riscv
+        uses: haltrv/builder/actions/build-image@2026.05.101
         with:
           arch: ${{ matrix.arch }}
           build-args: |
-            BUILD_FROM=ghcr.io/${{ github.repository_owner }}/${{ matrix.arch }}-homeassistant:${{ needs.init.outputs.version }}
+            BUILD_FROM=ghcr.io/haltrv/${{ matrix.arch }}-homeassistant:${{ needs.init.outputs.version }}
           cache-gha: false
           container-registry-password: ${{ secrets.GITHUB_TOKEN }}
           context: machine/
           cosign-base-identity: "https://github.com/${{ github.repository }}/.*"
-          cosign-base-verify: ghcr.io/${{ github.repository_owner }}/${{ matrix.arch }}-homeassistant:${{ needs.init.outputs.version }}
+          cosign-base-verify: ghcr.io/haltrv/${{ matrix.arch }}-homeassistant:${{ needs.init.outputs.version }}
           file: machine/${{ matrix.machine }}
-          image: ghcr.io/${{ github.repository_owner }}/${{ matrix.machine }}-homeassistant
+          image: ghcr.io/haltrv/${{ matrix.machine }}-homeassistant
           image-tags: |
             ${{ needs.init.outputs.version }}
             ${{ steps.tags.outputs.extra_tags }}
@@ -316,10 +316,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        registry: ["ghcr.io/home-assistant", "docker.io/homeassistant"]
+        registry: ["ghcr.io/haltrv", "docker.io/homeassistant"]
     steps:
       - name: Install Cosign
-        uses: eshattow/sigstore-cosign-installer@riscv
+        uses: haltrv/cosign-installer@2026.05.101
 
       - name: Login to DockerHub
         if: matrix.registry == 'docker.io/homeassistant'
@@ -347,7 +347,7 @@ jobs:
             cosign verify \
               --certificate-oidc-issuer https://token.actions.githubusercontent.com \
               --certificate-identity-regexp https://github.com/${{ github.repository }}/.* \
-              "ghcr.io/${{ github.repository_owner }}/${arch}-homeassistant:${VERSION}"
+              "ghcr.io/haltrv/${arch}-homeassistant:${VERSION}"
           done
           echo "✓ All images verified successfully"
 
@@ -390,7 +390,7 @@ jobs:
             for attempt in 1 2 3; do
               if docker buildx imagetools create \
                 --tag "docker.io/homeassistant/${arch}-homeassistant:${VERSION}" \
-                "ghcr.io/${{ github.repository_owner }}/${arch}-homeassistant:${VERSION}"; then
+                "ghcr.io/haltrv/${arch}-homeassistant:${VERSION}"; then
                 break
               fi
               echo "Attempt ${attempt} failed, retrying in 10 seconds..."
@@ -492,8 +492,8 @@ jobs:
       id-token: write # For build provenance attestation
     needs: ["init"]
     env:
-      HASSFEST_IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/hassfest
-      HASSFEST_IMAGE_TAG: ghcr.io/${{ github.repository_owner }}/hassfest:${{ needs.init.outputs.version }}
+      HASSFEST_IMAGE_NAME: ghcr.io/haltrv/hassfest
+      HASSFEST_IMAGE_TAG: ghcr.io/haltrv/hassfest:${{ needs.init.outputs.version }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2

@@ -233,7 +233,7 @@ aiocomelit==2.0.3
 aiodhcpwatcher==1.2.1
 
 # homeassistant.components.dhcp
-aiodiscover==2.7.1
+aiodiscover==3.0.0
 
 # homeassistant.components.dnsip
 aiodns==4.0.3
@@ -1186,7 +1186,7 @@ gspread==5.5.0
 guntamatic==1.6.0
 
 # homeassistant.components.profiler
-guppy3==3.1.6
+guppy3==3.1.7
 
 # homeassistant.components.iaqualink
 h2==4.3.0
@@ -1694,7 +1694,7 @@ numato-gpio==0.13.0
 # homeassistant.components.iqvia
 # homeassistant.components.stream
 # homeassistant.components.trend
-numpy==2.3.2
+numpy==2.4.4
 
 # homeassistant.components.nyt_games
 nyt_games==0.5.0
@@ -2485,7 +2485,7 @@ pyrisco==0.6.8
 pyrituals==0.0.7
 
 # homeassistant.components.thread
-pyroute2==0.7.5
+pyroute2==0.9.6
 
 # homeassistant.components.rympro
 pyrympro==0.0.9

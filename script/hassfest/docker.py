@@ -14,8 +14,7 @@ _DOCKERFILE_SYNTAX_SHA = (
 )
 
 _GO2RTC_SHA = (
-#    "675c318b23c06fd862a61d262240c9a63436b4050d177ffc68a32710d9e05bae"  # 1.9.14
-    "946b256dd610803963a78293f1d4dfea2f7675842b900c67b2f5da41e03d5be5"  # eshattow/go2rtc:riscv
+    "d51d70e0501c11237a5dadb3591e298782e658019ce620a9a8ac65e4d755efb9"  # haltrv/alexxit-go2rtc:riscv
 )
 
 DOCKERFILE_TEMPLATE = r"""# syntax=docker/dockerfile@sha256:{dockerfile_syntax}
